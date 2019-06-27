@@ -1,12 +1,24 @@
-import { EndpointRouterApi } from './controllerApiGenerated';
-import { IEndPointsResponse, IControllerError, IEndPointsRequest, IHttpResponse, IEndPoint } from './wrapper';
+import { EndpointRouterApi } from './apiGenerated';
+import { IEndPointsResponse, IControllerError, IEndPointsRequest, IHttpResponse, IEndPoint } from './types';
 
 /*---------------------------------------------------------------------------------------------
 *  Copyright (c) Microsoft Corporation. All rights reserved.
 *  Licensed under the Source EULA. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-export class ArisControllerApi {
+export class ArisController {
+
+	private static adjustUrl(url: string): string {
+		if (!url) {
+			return undefined;
+		}
+
+		url = url.trim().replace(/ /g,'').replace(/,(\d+)$/,':$1');
+		if (!url.includes('://')) {
+			url = `https://${url}`;
+		}
+		return url;
+	}
 
 	public static async getEndPoints(
 		url: string, username: string, password: string, ignoreSslVerification?: boolean
@@ -16,6 +28,7 @@ export class ArisControllerApi {
 			return undefined;
 		}
 
+		url = this.adjustUrl(url);
 		let ep = new EndpointRouterApi(username, password, url);
 		ep.ignoreSslVerification = !!ignoreSslVerification;
 

@@ -7,8 +7,8 @@
 
 import * as nls from 'vscode-nls';
 import * as azdata from 'azdata';
-import { IControllerError, IEndPointsResponse } from './controllerApi/wrapper';
-import { ArisControllerApi } from './controllerApi/controllerApi';
+import { IControllerError, IEndPointsResponse } from '../controller/types';
+import { ArisController } from '../controller/arisController';
 
 const localize = nls.loadMessageBundle();
 
@@ -235,6 +235,7 @@ export class AddControllerDialog {
 					label: 'Remember Password',
 					checked: this.prefilledValues.rememberPassword
 				}).component();
+			this.rememberPwCheckBox.enabled = false;
 
 			allContainer.addItem(this.rememberPwCheckBox, {
 				flex: '1, 1, 0%',
@@ -324,7 +325,7 @@ export class AddControllerDialog {
 		let username = this.usernameInputBox && this.usernameInputBox.value;
 		let password = this.passwordInputBox && this.passwordInputBox.value;
 
-		return await ArisControllerApi.getEndPoints(url, username, password, true).then(async response => {
+		return await ArisController.getEndPoints(url, username, password, true).then(async response => {
 			if (this.callback) {
 				await this.callback(response as IEndPointsResponse, !!this.rememberPwCheckBox.checked);
 			}

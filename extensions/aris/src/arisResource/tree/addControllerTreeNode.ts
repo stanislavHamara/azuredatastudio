@@ -8,7 +8,6 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { NodeInfo } from 'azdata';
 import { TreeNode } from './treeNode';
-import { ArisItemType } from '../constants';
 import * as nls from 'vscode-nls';
 
 const localize = nls.loadMessageBundle();
@@ -17,11 +16,8 @@ export class AddControllerTreeNode extends TreeNode {
 	private readonly nodeType: string;
 
 	constructor() {
-		super({
-			id: ArisItemType.AddController,
-			label: localize('aris.resource.signInLabel', 'Sign in to Aris Controller...')
-		});
-		this.nodeType = ArisItemType.AddController;
+		super({ label: localize('aris.resource.signInLabel', 'Sign in to Aris Controller...') });
+		this.nodeType = 'AddControllerTreeNode';
 	}
 
 	public async expand(): Promise<TreeNode[]> {

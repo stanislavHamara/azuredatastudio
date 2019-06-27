@@ -12,7 +12,7 @@ import { TreeNode } from './treeNode';
 import { IControllerTreeChangeHandler } from './controllerTreeChangeHandler';
 import { AddControllerTreeNode } from './addControllerTreeNode';
 import { ControllerRootNode, ControllerNode } from './controllerTreeNode';
-import { IEndPoint } from '../../controllerApi/wrapper';
+import { IEndPoint } from '../controller/types';
 
 const localize = nls.loadMessageBundle();
 
@@ -52,27 +52,26 @@ export class ControllerTreeDataProvider implements vscode.TreeDataProvider<TreeN
 		username: string,
 		password: string,
 		rememberPassword: boolean,
-		endPoints?: IEndPoint[]
+		masterInstance?: IEndPoint
 	): void {
-		this.root.addControllerNode(url, username, password, rememberPassword, endPoints);
+		this.root.addControllerNode(url, username, password, rememberPassword, masterInstance);
+		this.notifyNodeChanged();
 	}
 
 	public deleteController(url: string, username: string): ControllerNode {
-		return this.root.deleteControllerNode(url, username);
+		let deleted = this.root.deleteControllerNode(url, username);
+		if (deleted) {
+			this.notifyNodeChanged();
+		}
+		return deleted;
 	}
 
 	public notifyNodeChanged(node?: TreeNode): void {
-		this._onDidChangeTreeData.fire(node);
-	}
-
-	public notifyAllNodeChanged(): void {
-		this.root.children.forEach(c => {
-			(c as ControllerNode).skipDialog();
-		});
-		this._onDidChangeTreeData.fire();
-	}
-
-	public async refresh(node?: TreeNode): Promise<void> {
+		if (!node) {
+			this.root.children.forEach(c => {
+				(c as ControllerNode).skipDialog();
+			});
+		}
 		this._onDidChangeTreeData.fire(node);
 	}
 

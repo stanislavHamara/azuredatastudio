@@ -9,9 +9,10 @@ import * as vscode from 'vscode';
 import * as nls from 'vscode-nls';
 import { AppContext } from '../appContext';
 import { TreeNode } from './tree/treeNode';
-import { AddControllerDialog } from '../addControllerDialog';
+import { AddControllerDialog } from './dialog/addControllerDialog';
 import { ControllerTreeDataProvider } from './tree/controllerTreeDataProvider';
 import { ControllerNode } from './tree/controllerTreeNode';
+import { IEndPoint } from './controller/types';
 
 const localize = nls.loadMessageBundle();
 
@@ -30,9 +31,15 @@ function addBdcController(appContext: AppContext, treeDataProvider: ControllerTr
 
 		let d = new AddControllerDialog(prefilledValues);
 		d.showDialog(async (res, rememberPassword) => {
-			treeDataProvider.addController(res.request.url, res.request.username, res.request.password, rememberPassword, res.endPoints);
-			await treeDataProvider.saveControllers();
-			vscode.window.showInformationMessage(res.endPoints[0].endpoint);
+			if (res && res.request) {
+				let masterInstance: IEndPoint = undefined;
+				if (res.endPoints) {
+					masterInstance = res.endPoints.find(e => e.name && e.name === 'sql-server-master');
+				}
+				treeDataProvider.addController(res.request.url, res.request.username, res.request.password, rememberPassword, masterInstance);
+				await treeDataProvider.saveControllers();
+				vscode.window.showInformationMessage(res.endPoints[0].endpoint);
+			}
 		}, () => {
 		}, error => {
 			vscode.window.showInformationMessage(`${error.message}, What?!!`);

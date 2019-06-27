@@ -16,22 +16,25 @@ export abstract class TreeNode {
 	private _isLeaf: boolean;
 	private _autoLeaf: boolean;
 
-	constructor(p?: { id?: string, label?: string, parent?: TreeNode }) {
+	constructor(p?: {
+		label: string;
+		parent?: TreeNode;
+	}) {
 		this.initialize(p);
 	}
 
-	public initialize(p?: { id?: string, label?: string, parent?: TreeNode }) {
+	public initialize(p: {
+		label: string;
+		parent?: TreeNode;
+	}) {
 		if (p) {
-			this._id = 'id' in p ? p.id : this._id || '_';
-			this._label = 'label' in p ? p.label : this._label || this._id;
-			this._parent = 'parent' in p ? p.parent : this.parent;
-			this._isLeaf = false;
+			this._label = p.label;
+			this._parent = p.parent;
+			if (this._label) {
+				this._id = (this._parent ? `${this._parent._id}/` : '') + this._label;
+			}
 			this._autoLeaf = true;
 		}
-	}
-
-	public set id(id: string) {
-		this._id = id;
 	}
 
 	public get id(): string {
@@ -180,7 +183,7 @@ export abstract class TreeNode {
 		if ((!this.hasChildren && !this._isLeaf) || refresh) {
 			await this.expand().then(children => {
 				this._children = children;
-				if (this.autoLeaf) {
+				if (this._autoLeaf) {
 					this._isLeaf = !this.hasChildren;
 				}
 			}, error => {
@@ -190,22 +193,29 @@ export abstract class TreeNode {
 		return this._children;
 	}
 
+	public async expand(): Promise<TreeNode[]>{
+		return [];
+	}
+
 	public addChild(node: TreeNode): void {
 		if (!this._children) {
 			this._children = [];
 		}
 		this._children.push(node);
-		this._isLeaf = false;
+		if (this._autoLeaf) {
+			this._isLeaf = false;
+		}
 	}
 
 	public clearChildren(): void {
 		if (this._children) {
 			this._children = [];
-			this._isLeaf = false;
+			if (this._autoLeaf) {
+				this._isLeaf = false;
+			}
 		}
 	}
 
-	public abstract expand(): Promise<TreeNode[]>;
 	public abstract getTreeItem(): vscode.TreeItem;
 	public abstract getNodeInfo(): azdata.NodeInfo;
 }

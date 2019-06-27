@@ -9,8 +9,4 @@ import { TreeNode } from './treeNode';
 
 export interface IControllerTreeChangeHandler {
 	notifyNodeChanged(node?: TreeNode): void;
-	refresh(node?: TreeNode): Promise<void>;
-	loadSavedControllers(): void;
-	saveControllers(): Promise<void>;
-	notifyAllNodeChanged(): void;
 }
