@@ -12,7 +12,7 @@ import { IControllerTreeChangeHandler } from './controllerTreeChangeHandler';
 import { TreeNode } from './treeNode';
 import { IEndPoint, IControllerError } from '../controller/types';
 import { ArisController } from '../controller/arisController';
-import { IconPath } from '../constants';
+import { IconPath, BdcItemType } from '../constants';
 
 const localize = nls.loadMessageBundle();
 
@@ -54,6 +54,11 @@ export abstract class ControllerTreeNode extends TreeNode {
 
 	public async getChildren(): Promise<ControllerTreeNode[]> {
 		return this.children as ControllerTreeNode[];
+	}
+
+	public refresh(): void {
+		super.refresh();
+		this.treeChangeHandler.notifyNodeChanged(this);
 	}
 
 	public getTreeItem(): vscode.TreeItem {
@@ -127,7 +132,7 @@ export class ControllerRootNode extends ControllerTreeNode {
 		if (p) {
 			super.initialize(Object.assign({
 				label: 'root',
-				nodeType: 'ControllerRoot',
+				nodeType: BdcItemType.ControllerRoot,
 			}, p));
 		}
 	}
@@ -179,7 +184,6 @@ export class ControllerNode extends ControllerTreeNode {
 	private _username: string;
 	private _password: string;
 	private _rememberPassword: boolean;
-	private _skipDialog: number;
 
 	constructor(p?: {
 		url: string,
@@ -211,14 +215,13 @@ export class ControllerNode extends ControllerTreeNode {
 			super.initialize(Object.assign({
 				label,
 				description: p.description || label,
-				nodeType: 'ControllerNode',
+				nodeType: BdcItemType.Controller,
 				iconPath: IconPath.ControllerNode
 			}, p));
 			this._url = p.url;
 			this._username = p.username;
 			this._password = p.password;
 			this._rememberPassword = !!p.rememberPassword;
-			this._skipDialog = -1;
 		}
 	}
 
@@ -228,11 +231,7 @@ export class ControllerNode extends ControllerTreeNode {
 		}
 
 		if (!this._password) {
-			if (this._skipDialog > 0) {
-				this._skipDialog--;
-			} else {
-				vscode.commands.executeCommand('aris.resource.registerArisController', this);
-			}
+			vscode.commands.executeCommand('bigDataClusters.command.addController', this);
 			return this.children as EndPointNode[];
 		}
 
@@ -244,7 +243,7 @@ export class ControllerNode extends ControllerTreeNode {
 			return this.children as EndPointNode[];
 		}, error => {
 			let e = error as IControllerError;
-			vscode.window.showErrorMessage(`${e.message}, What?!!`);
+			vscode.window.showErrorMessage(e.message);
 			return this.children as EndPointNode[];
 		});
 	}
@@ -308,12 +307,6 @@ export class ControllerNode extends ControllerTreeNode {
 	public set rememberPassword(rememberPassword: boolean) {
 		this._rememberPassword = rememberPassword;
 	}
-
-	public skipDialog(): void {
-		if (!this._password) {
-			this._skipDialog++;
-		}
-	}
 }
 
 export class FolderNode extends ControllerTreeNode {
@@ -334,7 +327,7 @@ export class FolderNode extends ControllerTreeNode {
 		if (p) {
 			super.initialize(Object.assign({
 				description: p.label,
-				nodeType: 'FolderNode',
+				nodeType: BdcItemType.Folder,
 				iconPath: IconPath.FolderNode
 			}, p));
 		}
@@ -374,7 +367,7 @@ export class SqlMasterNode extends ControllerTreeNode {
 			super.initialize(Object.assign({
 				label,
 				description: p.description || label,
-				nodeType: 'SqlMasterNode',
+				nodeType: BdcItemType.SqlMaster,
 				iconPath: IconPath.SqlMasterNode
 			}, p));
 		}
@@ -455,7 +448,7 @@ export class EndPointNode extends ControllerTreeNode {
 			super.initialize(Object.assign({
 				label,
 				description: p.description || label,
-				nodeType: 'EndPointNode',
+				nodeType: BdcItemType.EndPoint,
 				iconPath: IconPath.EndPointNode
 			}, p));
 			this._role = p.role;

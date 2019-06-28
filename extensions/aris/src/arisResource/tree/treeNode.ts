@@ -30,11 +30,15 @@ export abstract class TreeNode {
 		if (p) {
 			this._label = p.label;
 			this._parent = p.parent;
-			if (this._label) {
-				this._id = (this._parent ? `${this._parent._id}/` : '') + this._label;
-			}
+			this.resetId();
 			this._autoLeaf = true;
 		}
+	}
+
+	public resetId(): void {
+		this._id = (this._parent ? `${this._parent._id}/` : '')
+			+ (this._label || '_')
+			+ `::${TreeNode.generateGuid()}`;
 	}
 
 	public get id(): string {
@@ -89,6 +93,10 @@ export abstract class TreeNode {
 			return undefined;
 		}
 		return this.nodePath === node.nodePath;
+	}
+
+	public refresh(): void {
+		this.resetId();
 	}
 
 	public static getRoot(node: TreeNode): TreeNode {
@@ -218,4 +226,23 @@ export abstract class TreeNode {
 
 	public abstract getTreeItem(): vscode.TreeItem;
 	public abstract getNodeInfo(): azdata.NodeInfo;
+
+	private static generateGuid(): string {
+		let hexValues: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+		let oct: string = '';
+		let tmp: number;
+		for (let a: number = 0; a < 4; a++) {
+			tmp = (4294967296 * Math.random()) | 0;
+			oct += hexValues[tmp & 0xF] +
+				hexValues[tmp >> 4 & 0xF] +
+				hexValues[tmp >> 8 & 0xF] +
+				hexValues[tmp >> 12 & 0xF] +
+				hexValues[tmp >> 16 & 0xF] +
+				hexValues[tmp >> 20 & 0xF] +
+				hexValues[tmp >> 24 & 0xF] +
+				hexValues[tmp >> 28 & 0xF];
+		}
+		let clockSequenceHi: string = hexValues[8 + (Math.random() * 4) | 0];
+		return oct.substr(0, 8) + '-' + oct.substr(9, 4) + '-4' + oct.substr(13, 3) + '-' + clockSequenceHi + oct.substr(16, 3) + '-' + oct.substr(19, 12);
+	}
 }

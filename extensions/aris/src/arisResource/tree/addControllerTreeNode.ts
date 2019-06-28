@@ -9,26 +9,27 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { NodeInfo } from 'azdata';
 import { TreeNode } from './treeNode';
 import * as nls from 'vscode-nls';
+import { BdcItemType } from '../constants';
 
 const localize = nls.loadMessageBundle();
 
-export class AddControllerTreeNode extends TreeNode {
+export class AddControllerNode extends TreeNode {
 	private readonly nodeType: string;
 
 	constructor() {
-		super({ label: localize('aris.resource.signInLabel', 'Sign in to Aris Controller...') });
-		this.nodeType = 'AddControllerTreeNode';
+		super({ label: localize('bigDataClusters.addControllerNodeLabel', 'Add Big Data Cluster Controller...') });
+		this.nodeType = BdcItemType.AddController;
 	}
 
-	public async expand(): Promise<TreeNode[]> {
+	public async getChildren(): Promise<TreeNode[]> {
 		return [];
 	}
 
 	public getTreeItem(): TreeItem {
 		let item = new TreeItem(this.label, TreeItemCollapsibleState.None);
 		item.command = {
-			title: 'registerArisController',
-			command: 'aris.resource.registerArisController',
+			title: 'Add SQL Server Big Data Cluster Controller',
+			command: 'bigDataClusters.command.addController',
 			arguments: [this]
 		};
 		item.contextValue = this.nodeType;

@@ -7,9 +7,13 @@
 
 import * as vscode from 'vscode';
 
-export enum ArisItemType {
-	Controller = 'aris.itemType.controller',
-	AddController = 'aris.itemType.addController',
+export enum BdcItemType {
+	ControllerRoot = 'bigDataClusters.itemType.ControllerRootNode',
+	Controller = 'bigDataClusters.itemType.ControllerNode',
+	Folder = 'bigDataClusters.itemType.FolderNode',
+	SqlMaster = 'bigDataClusters.itemType.SqlMasterNode',
+	EndPoint = 'bigDataClusters.itemType.EndPointNode',
+	AddController = 'bigDataClusters.itemType.AddControllerNode',
 }
 
 export class IconPath {
@@ -23,21 +27,20 @@ export class IconPath {
 	public static setExtensionContext(extensionContext: vscode.ExtensionContext) {
 		IconPath.extensionContext = extensionContext;
 		IconPath.ControllerNode = {
-			dark: IconPath.extensionContext.asAbsolutePath('resources/light/centralmanagement_server.svg'),
-			light: IconPath.extensionContext.asAbsolutePath('resources/light/centralmanagement_server.svg')
+			dark: IconPath.extensionContext.asAbsolutePath('resources/light/bigDataCluster_controller.svg'),
+			light: IconPath.extensionContext.asAbsolutePath('resources/light/bigDataCluster_controller.svg')
 		};
 		IconPath.FolderNode = {
-			dark: IconPath.extensionContext.asAbsolutePath('resources/light/folder_inverse.svg'),
+			dark: IconPath.extensionContext.asAbsolutePath('resources/dark/folder_inverse.svg'),
 			light: IconPath.extensionContext.asAbsolutePath('resources/light/folder.svg')
 		};
 		IconPath.SqlMasterNode = {
-			dark: IconPath.extensionContext.asAbsolutePath('resources/light/sql_bigdata_cluster_inverse.svg'),
+			dark: IconPath.extensionContext.asAbsolutePath('resources/dark/sql_bigdata_cluster_inverse.svg'),
 			light: IconPath.extensionContext.asAbsolutePath('resources/light/sql_bigdata_cluster.svg')
 		};
 		IconPath.EndPointNode = {
-			dark: IconPath.extensionContext.asAbsolutePath('resources/light/centralmanagement_server.svg'),
-			light: IconPath.extensionContext.asAbsolutePath('resources/light/centralmanagement_server.svg')
+			dark: IconPath.extensionContext.asAbsolutePath('resources/dark/endpoint_inverse.svg'),
+			light: IconPath.extensionContext.asAbsolutePath('resources/light/endpoint.svg')
 		};
-
 	}
 }

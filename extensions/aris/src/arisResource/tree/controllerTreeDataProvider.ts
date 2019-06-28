@@ -10,14 +10,14 @@ import * as nls from 'vscode-nls';
 import { AppContext } from '../../appContext';
 import { TreeNode } from './treeNode';
 import { IControllerTreeChangeHandler } from './controllerTreeChangeHandler';
-import { AddControllerTreeNode } from './addControllerTreeNode';
+import { AddControllerNode } from './addControllerTreeNode';
 import { ControllerRootNode, ControllerNode } from './controllerTreeNode';
 import { IEndPoint } from '../controller/types';
 
 const localize = nls.loadMessageBundle();
 
 export function registerTreeDataProvider(appContext: AppContext, treeDataProvider:ControllerTreeDataProvider): void {
-	appContext.apiWrapper.registerTreeDataProvider('arisResourceExplorer', treeDataProvider);
+	appContext.apiWrapper.registerTreeDataProvider('bigDataClusterExplorer', treeDataProvider);
 }
 
 export class ControllerTreeDataProvider implements vscode.TreeDataProvider<TreeNode>, IControllerTreeChangeHandler {
@@ -39,7 +39,7 @@ export class ControllerTreeDataProvider implements vscode.TreeDataProvider<TreeN
 		if (this.root.hasChildren) {
 			return this.root.getChildren();
 		} else {
-			return [new AddControllerTreeNode()];
+			return [new AddControllerNode()];
 		}
 	}
 
@@ -67,11 +67,6 @@ export class ControllerTreeDataProvider implements vscode.TreeDataProvider<TreeN
 	}
 
 	public notifyNodeChanged(node?: TreeNode): void {
-		if (!node) {
-			this.root.children.forEach(c => {
-				(c as ControllerNode).skipDialog();
-			});
-		}
 		this._onDidChangeTreeData.fire(node);
 	}
 

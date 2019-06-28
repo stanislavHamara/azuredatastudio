@@ -1,7 +1,7 @@
 {
 	"name": "aris",
-	"displayName": "%aris.displayName%",
-	"description": "%aris.description%",
+	"displayName": "%bigDataClusters.displayName%",
+	"description": "%bigDataClusters.description%",
 	"version": "0.0.1",
 	"publisher": "Microsoft",
 	"preview": true,
@@ -22,37 +22,37 @@
 	"main": "./out/extension",
 	"contributes": {
 		"dataExplorer": {
-			"arisResource": [
+			"bigDataClusters": [
 				{
-					"id": "arisResourceExplorer",
-					"name": "%aris.resource.explorer.title%"
+					"id": "bigDataClusterExplorer",
+					"name": "%bigDataClusters.explorer.title%"
 				}
 			]
 		},
 		"menus": {
 			"view/title": [
 				{
-					"command": "aris.resource.registerArisController",
-					"when": "view == arisResourceExplorer",
+					"command": "bigDataClusters.command.addController",
+					"when": "view == bigDataClusterExplorer",
 					"group": "navigation"
 				}
 			],
 			"view/item/context": [
 				{
-					"command": "bdcControllers.controller.delete",
-					"when": "viewItem == ControllerNode",
+					"command": "bigDataClusters.command.deleteController",
+					"when": "viewItem == bigDataClusters.itemType.ControllerNode",
 					"group": "navigation@1"
 				},
 				{
-					"command": "bdcControllers.controller.refresh",
-					"when": "viewItem == ControllerNode",
+					"command": "bigDataClusters.command.refreshController",
+					"when": "viewItem == bigDataClusters.itemType.ControllerNode",
 					"group": "navigation@2"
 				}
 			]
 		},
 		"configuration": {
 			"type": "object",
-			"title": "%aris.title%",
+			"title": "%bigDataClusters.config.title%",
 			"properties": {
 				"bigDataClusterControllers.controllers": {
 					"type": "array"
@@ -61,21 +61,21 @@
 		},
 		"commands": [
 			{
-				"command": "aris.resource.registerArisController",
-				"title": "%aris.resource.registerArisController.title%",
+				"command": "bigDataClusters.command.addController",
+				"title": "%bigDataClusters.command.addController.title%",
 				"icon": {
 					"light": "resources/light/add.svg",
 					"dark": "resources/dark/add_inverse.svg"
 				}
 			},
 			{
-				"command": "bdcControllers.controller.delete",
-				"title": "%bdcControllers.controller.delete.title%",
-				"when": "viewItem == ControllerNode"
+				"command": "bigDataClusters.command.deleteController",
+				"title": "%bigDataClusters.command.deleteController.title%",
+				"when": "viewItem == bigDataClusters.itemType.ControllerNode"
 			},
 			{
-				"command": "bdcControllers.controller.refresh",
-				"title": "%bdcControllers.controller.refresh.title%",
+				"command": "bigDataClusters.command.refreshController",
+				"title": "%bigDataClusters.command.refreshController.title%",
 				"icon": {
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh_inverse.svg"

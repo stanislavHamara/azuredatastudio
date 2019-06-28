@@ -14,9 +14,9 @@ const localize = nls.loadMessageBundle();
 
 export class AddControllerDialog {
 
-	private readonly DialogTitle: string = localize('aris.resource.signInDialog.title', 'New Aris Controller');
-	private readonly SignInButtonText: string = localize('aris.resource.signInDialog.signIn', 'Sign In');
-	private readonly CancelButtonText: string = localize('aris.resource.signInDialog.cancel', 'Cancel');
+	private readonly DialogTitle: string = localize('bigDataClusters.addControllerDialog.title', 'Add New Controller');
+	private readonly SignInButtonText: string = localize('bigDataClusters.addControllerDialog.ok.title', 'Add');
+	private readonly CancelButtonText: string = localize('bigDataClusters.addControllerDialog.cancel.title', 'Cancel');
 
 	private dialog: azdata.window.Dialog;
 	private modelBuilder: azdata.ModelBuilder;
@@ -61,11 +61,11 @@ export class AddControllerDialog {
 		this.setPrefilledValues(prefilledValues);
 	}
 
-	public showDialog(
+	public async showDialog(
 		callback: (e: IEndPointsResponse, rememberPassword: boolean) => any,
 		callbackCancel?: () => any,
 		callbackError?: (e: IControllerError) => any,
-	) {
+	): Promise<void> {
 		this.createDialog();
 		this.toggleSignInButton();
 		this.toggleErrorText();
@@ -81,7 +81,7 @@ export class AddControllerDialog {
 			this.modelBuilder = view.modelBuilder;
 
 			let tc = new TitledContainer(this.modelBuilder);
-			tc.title = localize('signInLabel', 'Sign In to Controller');
+			tc.title = localize('bigDataClusters.controllerCredentialTitle', 'Sign In to Controller');
 			tc.setTitleMargin(6, 0, 11, 0);
 			tc.setPadding(15, 30, 0, 30);
 			tc.contentTopLine = true;
@@ -266,11 +266,10 @@ export class AddControllerDialog {
 			await view.initializeModel(tc.flexContainer);
 		});
 
-		// this.dialog.okButton.onClick(async () => await this.execute());
+		this.dialog.registerCloseValidator(async () => await this.getEndpoints());
 		this.dialog.cancelButton.onClick(async () => await this.cancel());
 		this.dialog.okButton.label = this.SignInButtonText;
 		this.dialog.cancelButton.label = this.CancelButtonText;
-		this.dialog.registerCloseValidator(async () => await this.getEndpoints());
 	}
 
 	private toggleErrorText(errorMessage?: string): void {

@@ -19,7 +19,7 @@ export function activate(extensionContext: vscode.ExtensionContext) {
 	registerTreeDataProvider(appContext, treeDataProvider);
 	registerCommands(appContext, treeDataProvider);
 
-	vscode.window.showInformationMessage('sample extension started!');
+	vscode.window.showInformationMessage('yo!');
 }
 
 export function deactivate() {
