@@ -89,6 +89,7 @@ export class JupyterServerInstallation {
 				}
 				let doOnlineInstall = this._usingExistingPython;
 				await this.installSparkMagic(doOnlineInstall);
+				await this.installPowershell(true);
 			} catch (err) {
 				this.outputChannel.appendLine(msgDependenciesInstallationFailed(utils.getErrorMessage(err)));
 				throw err;
@@ -461,6 +462,24 @@ export class JupyterServerInstallation {
 			this.outputChannel.show(true);
 			this.outputChannel.appendLine(localize('msgInstallingSpark', "Installing SparkMagic..."));
 			await this.executeStreamedCommand(installSparkMagic);
+		}
+	}
+
+	private async installPowershell(doOnlineInstall: boolean): Promise<void> {
+		let installPowershell: string;
+		let cmdOptions = this._usingExistingPython ? '--user' : '';
+		if (doOnlineInstall) {
+			installPowershell = `"${this._pythonExecutable}" -m pip install ${cmdOptions} powershell_kernel --no-warn-script-location`;
+		} else {
+			installPowershell = `"${this._pythonExecutable}" -m pip install ${cmdOptions} --no-index powershell_kernel --find-links "${this._pythonPackageDir}" --no-warn-script-location`;
+		}
+
+		if (installPowershell) {
+			this.outputChannel.show(true);
+			this.outputChannel.appendLine(localize('msgInstallingPowershell', "Installing Powershell kernel..."));
+			await this.executeStreamedCommand(installPowershell);
+			let setupPowershell = `"${this._pythonExecutable}" -m powershell_kernel.install`;
+			await this.executeStreamedCommand(setupPowershell);
 		}
 	}
 
