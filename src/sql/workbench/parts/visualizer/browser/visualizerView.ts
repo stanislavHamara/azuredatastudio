@@ -25,20 +25,21 @@ import { CreateInsightAction, CopyAction, SaveImageAction, IChartActionContext }
 import { Taskbar } from 'sql/base/browser/ui/taskbar/taskbar';
 import { Checkbox } from 'sql/base/browser/ui/checkbox/checkbox';
 import { ChartState, IInsightOptions, ChartType } from 'sql/workbench/parts/charts/common/interfaces';
-// todo import dropdown
+import { Dropdown } from 'sql/base/parts/editableDropdown/browser/dropdown';
 declare class Proxy {
 	constructor(object, handler);
 }
 
 const insightRegistry = Registry.as<IInsightRegistry>(Extensions.InsightContribution);
 
-export class ChartView extends Disposable implements IPanelView {
+export class VisualizerView extends Disposable implements IPanelView {
 	private insight: Insight;
 	private _queryRunner: QueryRunner;
 	private _data: IInsightData;
 	private _currentData: { batchId: number, resultId: number };
 	private taskbar: Taskbar;
-	// TODO private dropdown: Dropdown
+	// TODO
+	private dropdown: Dropdown;
 	private _createInsightAction: CreateInsightAction;
 	private _copyAction: CopyAction;
 	private _saveAction: SaveImageAction;
@@ -63,10 +64,10 @@ export class ChartView extends Disposable implements IPanelView {
 	private chartingContainer: HTMLElement;
 
 	/** container for dropdown menu */
-	// private dropdownContainer: HTMLElement;
+	private dropdownContainer: HTMLElement;
 
 	/** container for visualizer extension */
-	// private extensionContainer: HTMLElement
+	private extensionContainer: HTMLElement;
 
 
 
@@ -86,8 +87,10 @@ export class ChartView extends Disposable implements IPanelView {
 		this.optionsControl.appendChild(generalControls);
 		this.typeControls = DOM.$('div.type-controls');
 		this.optionsControl.appendChild(this.typeControls);
-		// TODO this.dropdownContainer = DOM.$('div.dropdown-container');
-		// TODO this.dropdown = new Dropdown(this.dropdownContainer);
+		// TODO
+		this.dropdownContainer = DOM.$('div.dropdown-container');
+		// TODO
+		this.dropdown = new Dropdown(this.dropdownContainer, this._contextViewService);
 
 		this._createInsightAction = this._instantiationService.createInstance(CreateInsightAction);
 		this._copyAction = this._instantiationService.createInstance(CopyAction);
