@@ -22,6 +22,7 @@ import { attachTabbedPanelStyler } from 'sql/platform/theme/common/styler';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { MessagePanelState } from 'sql/workbench/parts/query/common/messagePanelState';
 import { GridPanelState } from 'sql/workbench/parts/query/common/gridPanelState';
+import { VisualizerTab } from 'sql/workbench/parts/visualizer/browser/visualizerTab';
 
 class MessagesView extends Disposable implements IPanelView {
 	private messagePanel: MessagePanel;
@@ -168,7 +169,8 @@ export class QueryResultsView extends Disposable {
 	private _input: QueryResultsInput;
 	private resultsTab: ResultsTab;
 	private messagesTab: MessagesTab;
-	private chartTab: ChartTab;
+	//private chartTab: ChartTab;
+	private chartTab: VisualizerTab;
 	private qpTab: QueryPlanTab;
 	private topOperationsTab: TopOperationsTab;
 	private dynamicModelViewTabs: QueryModelViewTab[] = [];
@@ -184,7 +186,9 @@ export class QueryResultsView extends Disposable {
 		super();
 		this.resultsTab = this._register(new ResultsTab(instantiationService));
 		this.messagesTab = this._register(new MessagesTab(instantiationService));
-		this.chartTab = this._register(new ChartTab(instantiationService));
+		//this.chartTab = this._register(new ChartTab(instantiationService));
+		this.chartTab = this._register(new VisualizerTab(instantiationService));
+
 		this._panelView = this._register(new TabbedPanel(container, { showHeaderWhenSingleView: true }));
 		this._register(attachTabbedPanelStyler(this._panelView, themeService));
 		this.qpTab = this._register(new QueryPlanTab());

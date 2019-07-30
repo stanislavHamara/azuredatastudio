@@ -26,6 +26,10 @@ import { Taskbar } from 'sql/base/browser/ui/taskbar/taskbar';
 import { Checkbox } from 'sql/base/browser/ui/checkbox/checkbox';
 import { ChartState, IInsightOptions, ChartType } from 'sql/workbench/parts/charts/common/interfaces';
 import { Dropdown } from 'sql/base/parts/editableDropdown/browser/dropdown';
+import { IDropdownOptions } from 'vs/base/browser/ui/dropdown/dropdown';
+import { localize } from 'vs/nls';
+import { ChartView } from 'sql/workbench/parts/charts/browser/chartView';
+import { ContextViewService } from 'vs/platform/contextview/browser/contextViewService';
 declare class Proxy {
 	constructor(object, handler);
 }
@@ -33,18 +37,21 @@ declare class Proxy {
 const insightRegistry = Registry.as<IInsightRegistry>(Extensions.InsightContribution);
 
 export class VisualizerView extends Disposable implements IPanelView {
+	private dropdown: SelectBox;
+	private currentVisExtension: string;
+
+	// For Charts
+	private charts: ChartView;
 	private insight: Insight;
 	private _queryRunner: QueryRunner;
 	private _data: IInsightData;
 	private _currentData: { batchId: number, resultId: number };
 	private taskbar: Taskbar;
-	// TODO
-	private dropdown: Dropdown;
 	private _createInsightAction: CreateInsightAction;
 	private _copyAction: CopyAction;
 	private _saveAction: SaveImageAction;
-
 	private _state: ChartState;
+	private readonly _selectVisExtensionString: string = localize("selectVisExtension", "Select Visualizer");
 
 	private options: IInsightOptions = {
 		type: ChartType.Bar
@@ -70,7 +77,6 @@ export class VisualizerView extends Disposable implements IPanelView {
 	private extensionContainer: HTMLElement;
 
 
-
 	private optionDisposables: IDisposable[] = [];
 	private optionMap: { [x: string]: { element: HTMLElement; set: (val) => void } } = {};
 
@@ -80,6 +86,29 @@ export class VisualizerView extends Disposable implements IPanelView {
 		@IInstantiationService private _instantiationService: IInstantiationService,
 	) {
 		super();
+
+		// Dropdown
+		this.dropdownContainer = DOM.$('div.dropdown-container');
+		// creating a dropdown
+		// this.dropdown = new Dropdown(this.dropdownContainer, this._contextViewService, {
+		// 	values: ["Charts", "Extenion2"],
+		// 	strictSelection: true,
+		// 	placeholder: this._selectVisExtensionString,
+		// 	ariaLabel: this._selectVisExtensionString,
+		// 	actionLabel: localize('listVisExtensions.toggleVisExtensionsDropdown', 'Select Visualizer Toggle Dropdown')
+		// });
+		// this.dropdown.onValueChange(s => this.visExtensionSelected(s));
+
+		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, undefined,{ ariaLabel: "Select Visualizer Extension" });
+		this.dropdown.render(this.dropdownContainer);
+		this.dropdown.onDidSelect(e => { this.visExtensionSelected(e.selected); });
+		//this.dropdown.disable();
+
+
+		this.currentVisExtension = "Charts";
+
+
+		// from Charts
 		this.taskbarContainer = DOM.$('div.taskbar-container');
 		this.taskbar = new Taskbar(this.taskbarContainer);
 		this.optionsControl = DOM.$('div.options-container');
@@ -87,11 +116,9 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.optionsControl.appendChild(generalControls);
 		this.typeControls = DOM.$('div.type-controls');
 		this.optionsControl.appendChild(this.typeControls);
-		// TODO
-		this.dropdownContainer = DOM.$('div.dropdown-container');
-		// TODO
-		this.dropdown = new Dropdown(this.dropdownContainer, this._contextViewService);
 
+		// Create chart
+		this.charts = _instantiationService.createInstance(ChartView);
 		this._createInsightAction = this._instantiationService.createInstance(CreateInsightAction);
 		this._copyAction = this._instantiationService.createInstance(CopyAction);
 		this._saveAction = this._instantiationService.createInstance(SaveImageAction);
@@ -135,6 +162,66 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.buildOptions();
 	}
 
+
+	// PRIVATE HELPERS for Visualiser Extensions /////////////////////////////////////////////////////
+	private visExtensionSelected(visExtensionName: string) {
+		console.log("VisExtension changed to: " + visExtensionName);
+		this.currentVisExtension = visExtensionName;
+		//this.container.appendChild(this.extensionContainer);
+		if (visExtensionName === "Charts") {
+			console.log("true, changed to: " +this.currentVisExtension);
+			this.getChartsView();
+		} else {
+			console.log("true, changed to: " +this.currentVisExtension);
+			this.getVisExtensionView();
+		}
+
+
+		// let uri = this._editor.input.uri;
+		// if (!uri) {
+		// 	return;
+		// }
+
+		// let profile = this.connectionManagementService.getConnectionProfile(uri);
+		// if (!profile) {
+		// 	return;
+		// }
+
+		// this.connectionManagementService.changeDatabase(this._editor.input.uri, dbName)
+		// 	.then(
+		// 		result => {
+		// 			if (!result) {
+		// 				this.resetDatabaseName();
+		// 				this.notificationService.notify({
+		// 					severity: Severity.Error,
+		// 					message: nls.localize('changeDatabase.failed', "Failed to change database")
+		// 				});
+		// 			}
+		// 		},
+		// 		error => {
+		// 			this.resetDatabaseName();
+		// 			this.notificationService.notify({
+		// 				severity: Severity.Error,
+		// 				message: nls.localize('changeDatabase.failedWithError', "Failed to change database {0}", error)
+		// 			});
+		// 		});
+	}
+
+	private getCurrentVisExtentionName() {
+		// let uri = this._editor.input.uri;
+		// if (uri) {
+		// 	let profile = this.connectionManagementService.getConnectionProfile(uri);
+		// 	if (profile) {
+		// 		return profile.databaseName;
+		// 	}
+		// }
+		// return undefined;
+	}
+
+
+
+
+
 	public clear() {
 
 	}
@@ -144,20 +231,56 @@ export class VisualizerView extends Disposable implements IPanelView {
 		super.dispose();
 	}
 
+	private getChartsView(): void {
+		//TODO return HTML element with Chart data
+
+		console.log("calling getChartView");
+		this.insightContainer = DOM.$('div.insight-container');
+		this.chartingContainer = DOM.$('div.charting-container');
+		this.extensionContainer = DOM.$('div.extension-container');
+		this.extensionContainer.appendChild(this.taskbarContainer);
+		this.extensionContainer.appendChild(this.chartingContainer);
+		this.chartingContainer.appendChild(this.insightContainer);
+		this.chartingContainer.appendChild(this.optionsControl);
+		this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
+		this.container.replaceWith(this.dropdownContainer);
+		this.container.append(this.extensionContainer);
+		//this.verifyOptions();
+
+
+	}
+
+	private getVisExtensionView(): void {
+		this.extensionContainer = DOM.$('div.extension-container');
+		this.container.replaceWith(this.dropdownContainer);
+		this.container.append(this.extensionContainer);
+		//this.verifyOptions();
+
+	}
+
 	render(container: HTMLElement): void {
 		if (!this.container) {
 			this.container = DOM.$('div.chart-parent-container');
 			this.insightContainer = DOM.$('div.insight-container');
 			this.chartingContainer = DOM.$('div.charting-container');
-			// TODO this.extensionContainer = DOM.$('div.extension-container');
-			// TODO this.container.appendChild(this.dropdownContainer);
+			this.extensionContainer = DOM.$('div.extension-container');
+			this.container.appendChild(this.dropdownContainer);
 
 			// TODO if (CHARTS):
-			this.container.appendChild(this.taskbarContainer);
-			this.container.appendChild(this.chartingContainer);
-			this.chartingContainer.appendChild(this.insightContainer);
-			this.chartingContainer.appendChild(this.optionsControl);
-			this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
+			if (this.currentVisExtension === "Charts") {
+				console.log("In Render, Charts");
+				this.extensionContainer.appendChild(this.taskbarContainer);
+				this.extensionContainer.appendChild(this.chartingContainer);
+				this.chartingContainer.appendChild(this.insightContainer);
+				this.chartingContainer.appendChild(this.optionsControl);
+				this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
+				//this.getChartsView();
+			} else {
+				console.log("In Render, not Charts");
+				//this.extensionContainer.hidden = true;
+			}
+			this.container.appendChild(this.extensionContainer);
+
 
 			// TODO else if (EXTENSION):
 			// this.container.appendChild(this.extensionContainer);

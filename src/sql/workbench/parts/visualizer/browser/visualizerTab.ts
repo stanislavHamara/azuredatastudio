@@ -23,7 +23,7 @@ export class VisualizerTab implements IPanelTab {
 		this.view.queryRunner = runner;
 	}
 
-	public visualizer(dataId: { batchId: number, resultId: number }): void {
+	public chart(dataId: { batchId: number, resultId: number }): void {
 		this.view.chart(dataId);
 	}
 
