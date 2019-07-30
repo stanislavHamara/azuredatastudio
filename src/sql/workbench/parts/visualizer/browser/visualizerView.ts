@@ -99,7 +99,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 		// });
 		// this.dropdown.onValueChange(s => this.visExtensionSelected(s));
 
-		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, undefined,{ ariaLabel: "Select Visualizer Extension" });
+		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, undefined, { ariaLabel: "Select Visualizer Extension" });
 		this.dropdown.render(this.dropdownContainer);
 		this.dropdown.onDidSelect(e => { this.visExtensionSelected(e.selected); });
 		//this.dropdown.disable();
@@ -169,10 +169,10 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.currentVisExtension = visExtensionName;
 		//this.container.appendChild(this.extensionContainer);
 		if (visExtensionName === "Charts") {
-			console.log("true, changed to: " +this.currentVisExtension);
+			console.log("true, changed to: " + this.currentVisExtension);
 			this.getChartsView();
 		} else {
-			console.log("true, changed to: " +this.currentVisExtension);
+			console.log("true, changed to: " + this.currentVisExtension);
 			this.getVisExtensionView();
 		}
 
