@@ -30,6 +30,7 @@ import { IDropdownOptions } from 'vs/base/browser/ui/dropdown/dropdown';
 import { localize } from 'vs/nls';
 import { ChartView } from 'sql/workbench/parts/charts/browser/chartView';
 import { ContextViewService } from 'vs/platform/contextview/browser/contextViewService';
+import { ChartTab } from 'sql/workbench/parts/charts/browser/chartTab';
 declare class Proxy {
 	constructor(object, handler);
 }
@@ -41,7 +42,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 	private currentVisualizerExtension: string;
 
 	// For Charts
-	private charts: ChartView;
+	private charts: ChartTab;
 	private insight: Insight;
 	private _queryRunner: QueryRunner;
 	private _data: IInsightData;
@@ -91,22 +92,11 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 		// Dropdown
 		this.dropdownContainer = DOM.$('div.dropdown-container');
-		// creating a dropdown
-		// this.dropdown = new Dropdown(this.dropdownContainer, this._contextViewService, {
-		// 	values: ["Charts", "Extenion2"],
-		// 	strictSelection: true,
-		// 	placeholder: this._selectVisualizerExtensionString,
-		// 	ariaLabel: this._selectVisualizerExtensionString,
-		// 	actionLabel: localize('listVisualizerExtensions.toggleVisualizerExtensionsDropdown', 'Select Visualizer Toggle Dropdown')
-		// });
-		// this.dropdown.onValueChange(s => this.visualizerExtensionSelected(s));
-
 		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, undefined, { ariaLabel: "Select Visualizer Extension" });
 		this.dropdown.render(this.dropdownContainer);
 		this.dropdown.onDidSelect(e => { this.visualizerExtensionSelected(e.selected); });
 
 		this.currentVisualizerExtension = "Charts";
-
 
 		// from Charts
 		this.taskbarContainer = DOM.$('div.taskbar-container');
@@ -118,7 +108,11 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.optionsControl.appendChild(this.typeControls);
 
 		// Create chart
+		//
 		//this.charts = _instantiationService.createInstance(ChartView);
+
+		//this.charts = this._register(new ChartTab(_instantiationService));
+
 		this._createInsightAction = this._instantiationService.createInstance(CreateInsightAction);
 		this._copyAction = this._instantiationService.createInstance(CopyAction);
 		this._saveAction = this._instantiationService.createInstance(SaveImageAction);
@@ -235,14 +229,17 @@ export class VisualizerView extends Disposable implements IPanelView {
 		//TODO return HTML element with Chart data
 
 		console.log("calling getChartView");
-		this.extensionContainer.append(this.chartContainer);
+		//this.extensionContainer.append(this.chartContainer);
+		this.chartContainer.hidden = false;
 
 
 	}
 
 	private getVisualizerExtensionView(): void {
 		console.log("calling getVisualizerExtensionView");
-		this.extensionContainer = DOM.$('div.extension-container');
+		//this.extensionContainer = DOM.$('div.extension-container');
+		this.chartContainer.hidden = true;
+
 
 	}
 
@@ -254,16 +251,14 @@ export class VisualizerView extends Disposable implements IPanelView {
 			this.extensionContainer = DOM.$('div.extension-container');
 			this.chartContainer = DOM.$('div.chartFull-container');
 			this.container.appendChild(this.dropdownContainer);
-			// TODO if (CHARTS):
-			console.log("In Render, Charts");
+
 			this.chartContainer.appendChild(this.taskbarContainer);
 			this.chartContainer.appendChild(this.chartingContainer);
 			this.chartingContainer.appendChild(this.insightContainer);
 			this.chartingContainer.appendChild(this.optionsControl);
 			this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
+			// appending charts to container
 			this.extensionContainer.append(this.chartContainer);
-			//this.getChartsView();
-
 			this.container.appendChild(this.extensionContainer);
 		}
 
