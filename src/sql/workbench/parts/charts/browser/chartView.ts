@@ -146,19 +146,12 @@ export class ChartView extends Disposable implements IPanelView {
 			this.container = DOM.$('div.chart-parent-container');
 			this.insightContainer = DOM.$('div.insight-container');
 			this.chartingContainer = DOM.$('div.charting-container');
-			// TODO this.extensionContainer = DOM.$('div.extension-container');
-			// TODO this.container.appendChild(this.dropdownContainer);
 
-			// TODO if (CHARTS):
 			this.container.appendChild(this.taskbarContainer);
 			this.container.appendChild(this.chartingContainer);
 			this.chartingContainer.appendChild(this.insightContainer);
 			this.chartingContainer.appendChild(this.optionsControl);
 			this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
-
-			// TODO else if (EXTENSION):
-			// this.container.appendChild(this.extensionContainer);
-			// this.insight = new (extension data)
 		}
 
 		container.appendChild(this.container);

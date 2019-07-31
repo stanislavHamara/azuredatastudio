@@ -42,7 +42,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 	private currentVisualizerExtension: string;
 
 	// For Charts
-	private charts: ChartTab;
+	private charts: ChartView;
 	private insight: Insight;
 	private _queryRunner: QueryRunner;
 	private _data: IInsightData;
@@ -92,7 +92,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 		// Dropdown
 		this.dropdownContainer = DOM.$('div.dropdown-container');
-		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, undefined, { ariaLabel: "Select Visualizer Extension" });
+		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, this.dropdownContainer, { ariaLabel: "Select Visualizer Extension" });
 		this.dropdown.render(this.dropdownContainer);
 		this.dropdown.onDidSelect(e => { this.visualizerExtensionSelected(e.selected); });
 
@@ -108,52 +108,40 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.optionsControl.appendChild(this.typeControls);
 
 		// Create chart
-		//
-		//this.charts = _instantiationService.createInstance(ChartView);
-
-		//this.charts = this._register(new ChartTab(_instantiationService));
+		this.charts = _instantiationService.createInstance(ChartView);
 
 		this._createInsightAction = this._instantiationService.createInstance(CreateInsightAction);
 		this._copyAction = this._instantiationService.createInstance(CopyAction);
 		this._saveAction = this._instantiationService.createInstance(SaveImageAction);
 
-		this.taskbar.setContent([{ action: this._createInsightAction }]);
+		//this.taskbar.setContent([{ action: this._createInsightAction }]);
 
 		const self = this;
-		this.options = new Proxy(this.options, {
-			get: function (target, key, receiver) {
-				return Reflect.get(target, key, receiver);
-			},
-			set: function (target, key, value, receiver) {
-				let change = false;
-				if (target[key] !== value) {
-					change = true;
-				}
+		// this.options = new Proxy(this.options, {
+		// 	get: function (target, key, receiver) {
+		// 		return Reflect.get(target, key, receiver);
+		// 	},
+		// 	set: function (target, key, value, receiver) {
+		// 		let change = false;
+		// 		if (target[key] !== value) {
+		// 			change = true;
+		// 		}
 
-				let result = Reflect.set(target, key, value, receiver);
-				// mirror the change in our state
-				if (self.state) {
-					Reflect.set(self.state.options, key, value);
-				}
+		// 		let result = Reflect.set(target, key, value, receiver);
+		// 		// mirror the change in our state
+		// 		if (self.state) {
+		// 			Reflect.set(self.state.options, key, value);
+		// 		}
 
-				if (change) {
-					self.taskbar.context = <IChartActionContext>{ options: self.options, insight: self.insight ? self.insight.insight : undefined };
-					if (key === 'type') {
-						self.buildOptions();
-					} else {
-						self.verifyOptions();
-					}
-				}
+		// 		return result;
+		// 	}
+		// }) as IInsightOptions;
 
-				return result;
-			}
-		}) as IInsightOptions;
-
-		ChartOptions.general[0].options = insightRegistry.getAllIds();
-		ChartOptions.general.map(o => {
-			this.createOption(o, generalControls);
-		});
-		this.buildOptions();
+		// ChartOptions.general[0].options = insightRegistry.getAllIds();
+		// ChartOptions.general.map(o => {
+		// 	this.createOption(o, generalControls);
+		// });
+		// this.buildOptions();
 	}
 
 
@@ -169,59 +157,21 @@ export class VisualizerView extends Disposable implements IPanelView {
 			console.log("true, changed to: " + this.currentVisualizerExtension);
 			this.getVisualizerExtensionView();
 		}
-
-
-		// let uri = this._editor.input.uri;
-		// if (!uri) {
-		// 	return;
-		// }
-
-		// let profile = this.connectionManagementService.getConnectionProfile(uri);
-		// if (!profile) {
-		// 	return;
-		// }
-
-		// this.connectionManagementService.changeDatabase(this._editor.input.uri, dbName)
-		// 	.then(
-		// 		result => {
-		// 			if (!result) {
-		// 				this.resetDatabaseName();
-		// 				this.notificationService.notify({
-		// 					severity: Severity.Error,
-		// 					message: nls.localize('changeDatabase.failed', "Failed to change database")
-		// 				});
-		// 			}
-		// 		},
-		// 		error => {
-		// 			this.resetDatabaseName();
-		// 			this.notificationService.notify({
-		// 				severity: Severity.Error,
-		// 				message: nls.localize('changeDatabase.failedWithError', "Failed to change database {0}", error)
-		// 			});
-		// 		});
 	}
 
 	private getCurrentVisualizerExtentionName() {
-		// let uri = this._editor.input.uri;
-		// if (uri) {
-		// 	let profile = this.connectionManagementService.getConnectionProfile(uri);
-		// 	if (profile) {
-		// 		return profile.databaseName;
-		// 	}
-		// }
-		// return undefined;
+
 	}
 
 
-
-
-
 	public clear() {
+		this.charts.clear();
 
 	}
 
 	public dispose() {
 		dispose(this.optionDisposables);
+		this.charts.dispose();
 		super.dispose();
 	}
 
@@ -246,19 +196,12 @@ export class VisualizerView extends Disposable implements IPanelView {
 	render(container: HTMLElement): void {
 		if (!this.container) {
 			this.container = DOM.$('div.chart-parent-container');
-			this.insightContainer = DOM.$('div.insight-container');
-			this.chartingContainer = DOM.$('div.charting-container');
+			this.container.appendChild(this.dropdownContainer);
 			this.extensionContainer = DOM.$('div.extension-container');
 			this.chartContainer = DOM.$('div.chartFull-container');
-			this.container.appendChild(this.dropdownContainer);
 
-			this.chartContainer.appendChild(this.taskbarContainer);
-			this.chartContainer.appendChild(this.chartingContainer);
-			this.chartingContainer.appendChild(this.insightContainer);
-			this.chartingContainer.appendChild(this.optionsControl);
-			this.insight = new Insight(this.insightContainer, this.options, this._instantiationService);
-			// appending charts to container
-			this.extensionContainer.append(this.chartContainer);
+			this.charts.render(this.chartContainer);
+			this.extensionContainer.appendChild(this.chartContainer);
 			this.container.appendChild(this.extensionContainer);
 		}
 
@@ -272,10 +215,12 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.verifyOptions();
 	}
 
+	// call "chart" function from charts instance
 	public chart(dataId: { batchId: number, resultId: number }) {
+		this.charts.chart(dataId);
 		this.state.dataId = dataId;
 		this._currentData = dataId;
-		this.shouldGraph();
+		//this.charts.chart(this._currentData);
 	}
 
 	layout(dimension: DOM.Dimension): void {
@@ -288,33 +233,34 @@ export class VisualizerView extends Disposable implements IPanelView {
 	}
 
 	public set queryRunner(runner: QueryRunner) {
+		this.charts.queryRunner = runner;
 		this._queryRunner = runner;
-		this.shouldGraph();
+		//this.shouldGraph();
 	}
 
-	private shouldGraph() {
-		// Check if we have the necessary information
-		if (this._currentData && this._queryRunner) {
-			// check if we are being asked to graph something that is available
-			let batch = this._queryRunner.batchSets[this._currentData.batchId];
-			if (batch) {
-				let summary = batch.resultSetSummaries[this._currentData.resultId];
-				if (summary) {
-					this._queryRunner.getQueryRows(0, summary.rowCount, 0, 0).then(d => {
-						this._data = {
-							columns: summary.columnInfo.map(c => c.columnName),
-							rows: d.resultSubset.rows.map(r => r.map(c => c.displayValue))
-						};
-						if (this.insight) {
-							this.insight.data = this._data;
-						}
-					});
-				}
-			}
-			// if we have the necessary information but the information isn't available yet,
-			// we should be smart and retrying when the information might be available
-		}
-	}
+	// private shouldGraph() {
+	// 	// Check if we have the necessary information
+	// 	if (this._currentData && this._queryRunner) {
+	// 		// check if we are being asked to graph something that is available
+	// 		let batch = this._queryRunner.batchSets[this._currentData.batchId];
+	// 		if (batch) {
+	// 			let summary = batch.resultSetSummaries[this._currentData.resultId];
+	// 			if (summary) {
+	// 				this._queryRunner.getQueryRows(0, summary.rowCount, 0, 0).then(d => {
+	// 					this._data = {
+	// 						columns: summary.columnInfo.map(c => c.columnName),
+	// 						rows: d.resultSubset.rows.map(r => r.map(c => c.displayValue))
+	// 					};
+	// 					if (this.insight) {
+	// 						this.insight.data = this._data;
+	// 					}
+	// 				});
+	// 			}
+	// 		}
+	// 		// if we have the necessary information but the information isn't available yet,
+	// 		// we should be smart and retrying when the information might be available
+	// 	}
+	// }
 
 	private buildOptions() {
 		// The first element in the disposables list is for the chart type: the master dropdown that controls other option controls.
@@ -474,6 +420,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 	}
 
 	public set state(val: ChartState) {
+		this.charts.state = val;
 		this._state = val;
 		if (this.state.options) {
 			for (let key in this.state.options) {
@@ -484,7 +431,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 			}
 		}
 		if (this.state.dataId) {
-			this.chart(this.state.dataId);
+			this.charts.chart(this.state.dataId);
 		}
 	}
 
