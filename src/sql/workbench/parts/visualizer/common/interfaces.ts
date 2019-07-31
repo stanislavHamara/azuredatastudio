@@ -4,20 +4,32 @@
  *--------------------------------------------------------------------------------------------*/
 
 import product from 'vs/platform/product/node/product';
+import { IExtensionsWorkbenchService, IExtension } from 'vs/workbench/contrib/extensions/common/extensions';
 import * as Constants from 'sql/workbench/contrib/extensions/constants';
 
+
+export interface AllOptions {
+	[key: string]: any;
+}
 export class VisualizerState {
 	dataId: { batchId: number, resultId: number };
-	type: VisualizerOptions.Charts;
+	type: 'charts';
+	installedVisualizerExtensions: AllOptions;
+
+	constructor(@IExtensionsWorkbenchService private readonly extensionWorkbenchService: IExtensionsWorkbenchService) {
+		this.installedVisualizerExtensions = {};
+		this.getInstalledVisualizerExtensions();
+	}
 
 	dispose() { }
 
-	private getChartTypes() {
+	private getInstalledVisualizerExtensions() {
 		let visualizerExtensions = product.recommendedExtensionsByScenario[Constants.visualizerExtensions];
-		// filter by the extensions that are downloaded
+		let installedExtensions = this.extensionWorkbenchService.installed;
+		visualizerExtensions.forEach(extension => {
+			if (extension in installedExtensions) {
+				this.installedVisualizerExtensions[extension] = extension;
+			}
+		});
 	}
-}
-
-export enum VisualizerOptions {
-	Charts = 'charts'
 }
