@@ -11,7 +11,7 @@ import { localize } from 'vs/nls';
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 
 export class VisualizerTab implements IPanelTab {
-	public readonly title = localize('VisualizerTabTitle', 'VisualizerS');
+	public readonly title = localize('VisualizerTabTitle', 'Visualizer');
 	public readonly identifier = 'VisualizerTab';
 	public readonly view: VisualizerView;
 
