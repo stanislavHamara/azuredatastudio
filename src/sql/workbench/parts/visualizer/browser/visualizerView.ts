@@ -31,6 +31,7 @@ import { localize } from 'vs/nls';
 import { ChartView } from 'sql/workbench/parts/charts/browser/chartView';
 import { ContextViewService } from 'vs/platform/contextview/browser/contextViewService';
 import { ChartTab } from 'sql/workbench/parts/charts/browser/chartTab';
+import { VisualizerState } from 'sql/workbench/parts/visualizer/common/interfaces';
 declare class Proxy {
 	constructor(object, handler);
 }
@@ -40,6 +41,7 @@ const insightRegistry = Registry.as<IInsightRegistry>(Extensions.InsightContribu
 export class VisualizerView extends Disposable implements IPanelView {
 	private dropdown: SelectBox;
 	private currentVisualizerExtension: string;
+	private visualizerState: VisualizerState;
 
 	// For Charts
 	private charts: ChartView;
@@ -95,28 +97,14 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.dropdown = new SelectBox(["Charts", "Extension2"], "Charts", this._contextViewService, this.dropdownContainer, { ariaLabel: "Select Visualizer Extension" });
 		this.dropdown.render(this.dropdownContainer);
 		this.dropdown.onDidSelect(e => { this.visualizerExtensionSelected(e.selected); });
-
 		this.currentVisualizerExtension = "Charts";
-
-		// from Charts
-		this.taskbarContainer = DOM.$('div.taskbar-container');
-		this.taskbar = new Taskbar(this.taskbarContainer);
-		this.optionsControl = DOM.$('div.options-container');
-		const generalControls = DOM.$('div.general-controls');
-		this.optionsControl.appendChild(generalControls);
-		this.typeControls = DOM.$('div.type-controls');
-		this.optionsControl.appendChild(this.typeControls);
 
 		// Create chart
 		this.charts = _instantiationService.createInstance(ChartView);
-
-		this._createInsightAction = this._instantiationService.createInstance(CreateInsightAction);
-		this._copyAction = this._instantiationService.createInstance(CopyAction);
-		this._saveAction = this._instantiationService.createInstance(SaveImageAction);
-
-		//this.taskbar.setContent([{ action: this._createInsightAction }]);
-
 		const self = this;
+
+		//TODO: create all the containers and visualizer option instances?
+
 		// this.options = new Proxy(this.options, {
 		// 	get: function (target, key, receiver) {
 		// 		return Reflect.get(target, key, receiver);
@@ -165,8 +153,8 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 
 	public clear() {
+		// clear all extensions?
 		this.charts.clear();
-
 	}
 
 	public dispose() {
@@ -176,10 +164,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 	}
 
 	private getChartsView(): void {
-		//TODO return HTML element with Chart data
-
 		console.log("calling getChartView");
-		//this.extensionContainer.append(this.chartContainer);
 		this.chartContainer.hidden = false;
 
 
@@ -187,10 +172,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 	private getVisualizerExtensionView(): void {
 		console.log("calling getVisualizerExtensionView");
-		//this.extensionContainer = DOM.$('div.extension-container');
 		this.chartContainer.hidden = true;
-
-
 	}
 
 	render(container: HTMLElement): void {
@@ -207,12 +189,7 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 		container.appendChild(this.container);
 
-		if (this._data) {
-			this.insight.data = this._data;
-		} else {
-			this.queryRunner = this._queryRunner;
-		}
-		this.verifyOptions();
+
 	}
 
 	// call "chart" function from charts instance
@@ -262,162 +239,162 @@ export class VisualizerView extends Disposable implements IPanelView {
 	// 	}
 	// }
 
-	private buildOptions() {
-		// The first element in the disposables list is for the chart type: the master dropdown that controls other option controls.
-		// whiling rebuilding the options we should not dispose it, otherwise it would react to the theme change event
-		if (this.optionDisposables.length > 1) {
-			dispose(this.optionDisposables.slice(1));
-			this.optionDisposables.splice(1);
-		}
+	// private buildOptions() {
+	// 	// The first element in the disposables list is for the chart type: the master dropdown that controls other option controls.
+	// 	// whiling rebuilding the options we should not dispose it, otherwise it would react to the theme change event
+	// 	if (this.optionDisposables.length > 1) {
+	// 		dispose(this.optionDisposables.slice(1));
+	// 		this.optionDisposables.splice(1);
+	// 	}
 
-		this.optionMap = {
-			'type': this.optionMap['type']
-		};
-		DOM.clearNode(this.typeControls);
+	// 	this.optionMap = {
+	// 		'type': this.optionMap['type']
+	// 	};
+	// 	DOM.clearNode(this.typeControls);
 
-		this.updateActionbar();
-		ChartOptions[this.options.type].map(o => {
-			this.createOption(o, this.typeControls);
-		});
-		if (this.insight) {
-			this.insight.options = this.options;
-		}
-		this.verifyOptions();
-	}
+	// 	this.updateActionbar();
+	// 	ChartOptions[this.options.type].map(o => {
+	// 		this.createOption(o, this.typeControls);
+	// 	});
+	// 	if (this.insight) {
+	// 		this.insight.options = this.options;
+	// 	}
+	// 	this.verifyOptions();
+	// }
 
-	private verifyOptions() {
-		this.updateActionbar();
-		for (let key in this.optionMap) {
-			if (this.optionMap.hasOwnProperty(key)) {
-				let option = ChartOptions[this.options.type].find(e => e.configEntry === key);
-				if (option && option.if) {
-					if (option.if(this.options)) {
-						DOM.show(this.optionMap[key].element);
-					} else {
-						DOM.hide(this.optionMap[key].element);
-					}
-				}
-			}
-		}
-	}
+	// private verifyOptions() {
+	// 	this.updateActionbar();
+	// 	for (let key in this.optionMap) {
+	// 		if (this.optionMap.hasOwnProperty(key)) {
+	// 			let option = ChartOptions[this.options.type].find(e => e.configEntry === key);
+	// 			if (option && option.if) {
+	// 				if (option.if(this.options)) {
+	// 					DOM.show(this.optionMap[key].element);
+	// 				} else {
+	// 					DOM.hide(this.optionMap[key].element);
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	private updateActionbar() {
-		if (this.insight && this.insight.isCopyable) {
-			this.taskbar.context = { insight: this.insight.insight, options: this.options };
-			this.taskbar.setContent([
-				{ action: this._createInsightAction },
-				{ action: this._copyAction },
-				{ action: this._saveAction }
-			]);
-		} else {
-			this.taskbar.setContent([{ action: this._createInsightAction }]);
-		}
-	}
+	// private updateActionbar() {
+	// 	if (this.insight && this.insight.isCopyable) {
+	// 		this.taskbar.context = { insight: this.insight.insight, options: this.options };
+	// 		this.taskbar.setContent([
+	// 			{ action: this._createInsightAction },
+	// 			{ action: this._copyAction },
+	// 			{ action: this._saveAction }
+	// 		]);
+	// 	} else {
+	// 		this.taskbar.setContent([{ action: this._createInsightAction }]);
+	// 	}
+	// }
 
-	private createOption(option: IChartOption, container: HTMLElement) {
-		let label = DOM.$('div');
-		label.innerText = option.label;
-		let optionContainer = DOM.$('div.option-container');
-		optionContainer.appendChild(label);
-		let setFunc: (val) => void;
-		let value = this.state ? this.state.options[option.configEntry] || option.default : option.default;
-		switch (option.type) {
-			case ControlType.checkbox:
-				let checkbox = new Checkbox(optionContainer, {
-					label: '',
-					ariaLabel: option.label,
-					checked: value,
-					onChange: () => {
-						if (this.options[option.configEntry] !== checkbox.checked) {
-							this.options[option.configEntry] = checkbox.checked;
-							if (this.insight) {
-								this.insight.options = this.options;
-							}
-						}
-					}
-				});
-				setFunc = (val: boolean) => {
-					checkbox.checked = val;
-				};
-				break;
-			case ControlType.combo:
-				let dropdown = new SelectBox(option.displayableOptions || option.options, undefined, this._contextViewService);
-				dropdown.select(option.options.indexOf(value));
-				dropdown.render(optionContainer);
-				dropdown.onDidSelect(e => {
-					if (this.options[option.configEntry] !== option.options[e.index]) {
-						this.options[option.configEntry] = option.options[e.index];
-						if (this.insight) {
-							this.insight.options = this.options;
-						}
-					}
-				});
-				setFunc = (val: string) => {
-					if (!isUndefinedOrNull(val)) {
-						dropdown.select(option.options.indexOf(val));
-					}
-				};
-				this.optionDisposables.push(attachSelectBoxStyler(dropdown, this._themeService));
-				break;
-			case ControlType.input:
-				let input = new InputBox(optionContainer, this._contextViewService);
-				input.value = value || '';
-				input.onDidChange(e => {
-					if (this.options[option.configEntry] !== e) {
-						this.options[option.configEntry] = e;
-						if (this.insight) {
-							this.insight.options = this.options;
-						}
-					}
-				});
-				setFunc = (val: string) => {
-					if (!isUndefinedOrNull(val)) {
-						input.value = val;
-					}
-				};
-				this.optionDisposables.push(attachInputBoxStyler(input, this._themeService));
-				break;
-			case ControlType.numberInput:
-				let numberInput = new InputBox(optionContainer, this._contextViewService, { type: 'number' });
-				numberInput.value = value || '';
-				numberInput.onDidChange(e => {
-					if (this.options[option.configEntry] !== Number(e)) {
-						this.options[option.configEntry] = Number(e);
-						if (this.insight) {
-							this.insight.options = this.options;
-						}
-					}
-				});
-				setFunc = (val: string) => {
-					if (!isUndefinedOrNull(val)) {
-						numberInput.value = val;
-					}
-				};
-				this.optionDisposables.push(attachInputBoxStyler(numberInput, this._themeService));
-				break;
-			case ControlType.dateInput:
-				let dateInput = new InputBox(optionContainer, this._contextViewService, { type: 'datetime-local' });
-				dateInput.value = value || '';
-				dateInput.onDidChange(e => {
-					if (this.options[option.configEntry] !== e) {
-						this.options[option.configEntry] = e;
-						if (this.insight) {
-							this.insight.options = this.options;
-						}
-					}
-				});
-				setFunc = (val: string) => {
-					if (!isUndefinedOrNull(val)) {
-						dateInput.value = val;
-					}
-				};
-				this.optionDisposables.push(attachInputBoxStyler(dateInput, this._themeService));
-				break;
-		}
-		this.optionMap[option.configEntry] = { element: optionContainer, set: setFunc };
-		container.appendChild(optionContainer);
-		this.options[option.configEntry] = value;
-	}
+	// private createOption(option: IChartOption, container: HTMLElement) {
+	// 	let label = DOM.$('div');
+	// 	label.innerText = option.label;
+	// 	let optionContainer = DOM.$('div.option-container');
+	// 	optionContainer.appendChild(label);
+	// 	let setFunc: (val) => void;
+	// 	let value = this.state ? this.state.options[option.configEntry] || option.default : option.default;
+	// 	switch (option.type) {
+	// 		case ControlType.checkbox:
+	// 			let checkbox = new Checkbox(optionContainer, {
+	// 				label: '',
+	// 				ariaLabel: option.label,
+	// 				checked: value,
+	// 				onChange: () => {
+	// 					if (this.options[option.configEntry] !== checkbox.checked) {
+	// 						this.options[option.configEntry] = checkbox.checked;
+	// 						if (this.insight) {
+	// 							this.insight.options = this.options;
+	// 						}
+	// 					}
+	// 				}
+	// 			});
+	// 			setFunc = (val: boolean) => {
+	// 				checkbox.checked = val;
+	// 			};
+	// 			break;
+	// 		case ControlType.combo:
+	// 			let dropdown = new SelectBox(option.displayableOptions || option.options, undefined, this._contextViewService);
+	// 			dropdown.select(option.options.indexOf(value));
+	// 			dropdown.render(optionContainer);
+	// 			dropdown.onDidSelect(e => {
+	// 				if (this.options[option.configEntry] !== option.options[e.index]) {
+	// 					this.options[option.configEntry] = option.options[e.index];
+	// 					if (this.insight) {
+	// 						this.insight.options = this.options;
+	// 					}
+	// 				}
+	// 			});
+	// 			setFunc = (val: string) => {
+	// 				if (!isUndefinedOrNull(val)) {
+	// 					dropdown.select(option.options.indexOf(val));
+	// 				}
+	// 			};
+	// 			this.optionDisposables.push(attachSelectBoxStyler(dropdown, this._themeService));
+	// 			break;
+	// 		case ControlType.input:
+	// 			let input = new InputBox(optionContainer, this._contextViewService);
+	// 			input.value = value || '';
+	// 			input.onDidChange(e => {
+	// 				if (this.options[option.configEntry] !== e) {
+	// 					this.options[option.configEntry] = e;
+	// 					if (this.insight) {
+	// 						this.insight.options = this.options;
+	// 					}
+	// 				}
+	// 			});
+	// 			setFunc = (val: string) => {
+	// 				if (!isUndefinedOrNull(val)) {
+	// 					input.value = val;
+	// 				}
+	// 			};
+	// 			this.optionDisposables.push(attachInputBoxStyler(input, this._themeService));
+	// 			break;
+	// 		case ControlType.numberInput:
+	// 			let numberInput = new InputBox(optionContainer, this._contextViewService, { type: 'number' });
+	// 			numberInput.value = value || '';
+	// 			numberInput.onDidChange(e => {
+	// 				if (this.options[option.configEntry] !== Number(e)) {
+	// 					this.options[option.configEntry] = Number(e);
+	// 					if (this.insight) {
+	// 						this.insight.options = this.options;
+	// 					}
+	// 				}
+	// 			});
+	// 			setFunc = (val: string) => {
+	// 				if (!isUndefinedOrNull(val)) {
+	// 					numberInput.value = val;
+	// 				}
+	// 			};
+	// 			this.optionDisposables.push(attachInputBoxStyler(numberInput, this._themeService));
+	// 			break;
+	// 		case ControlType.dateInput:
+	// 			let dateInput = new InputBox(optionContainer, this._contextViewService, { type: 'datetime-local' });
+	// 			dateInput.value = value || '';
+	// 			dateInput.onDidChange(e => {
+	// 				if (this.options[option.configEntry] !== e) {
+	// 					this.options[option.configEntry] = e;
+	// 					if (this.insight) {
+	// 						this.insight.options = this.options;
+	// 					}
+	// 				}
+	// 			});
+	// 			setFunc = (val: string) => {
+	// 				if (!isUndefinedOrNull(val)) {
+	// 					dateInput.value = val;
+	// 				}
+	// 			};
+	// 			this.optionDisposables.push(attachInputBoxStyler(dateInput, this._themeService));
+	// 			break;
+	// 	}
+	// 	this.optionMap[option.configEntry] = { element: optionContainer, set: setFunc };
+	// 	container.appendChild(optionContainer);
+	// 	this.options[option.configEntry] = value;
+	// }
 
 	public set state(val: ChartState) {
 		this.charts.state = val;
