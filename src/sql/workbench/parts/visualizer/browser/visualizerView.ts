@@ -46,15 +46,13 @@ export class VisualizerView extends Disposable implements IPanelView {
 	// For Charts
 	private charts: ChartView;
 	private insight: Insight;
-	private _queryRunner: QueryRunner;
-	private _data: IInsightData;
 	private _currentData: { batchId: number, resultId: number };
-	private taskbar: Taskbar;
-	private _createInsightAction: CreateInsightAction;
-	private _copyAction: CopyAction;
-	private _saveAction: SaveImageAction;
 	private _state: ChartState;
 	private readonly _selectVisualizerExtensionString: string = localize("selectVisualizerExtension", "Select Visualizer");
+	private extensionOptions = {
+		Charts: "charts",
+		Sanddance: "msrvida-azdata-sanddance"
+	};
 
 	private options: IInsightOptions = {
 		type: ChartType.Bar
@@ -62,20 +60,10 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 	/** parent container */
 	private container: HTMLElement;
-	/** container for the options controls */
-	private optionsControl: HTMLElement;
-	/** container for type specific controls */
-	private typeControls: HTMLElement;
 	/** container for the insight */
 	private insightContainer: HTMLElement;
-	/** container for the action bar */
-	private taskbarContainer: HTMLElement;
-	/** container for the charting (includes insight and options) */
-	private chartingContainer: HTMLElement;
-
 	/** container for dropdown menu */
 	private dropdownContainer: HTMLElement;
-
 	/** container for visualizer extension */
 	private extensionContainer: HTMLElement;
 
@@ -83,7 +71,8 @@ export class VisualizerView extends Disposable implements IPanelView {
 	private chartContainer: HTMLElement;
 
 	private optionDisposables: IDisposable[] = [];
-	private optionMap: { [x: string]: { element: HTMLElement; set: (val) => void } } = {};
+
+	private optionMap: { [x: string]: { element: HTMLElement } } = {};
 
 	constructor(
 		@IContextViewService private _contextViewService: IContextViewService,
@@ -103,27 +92,18 @@ export class VisualizerView extends Disposable implements IPanelView {
 		this.charts = _instantiationService.createInstance(ChartView);
 		const self = this;
 
+		this.chartContainer = DOM.$('div.chartFull-container');
+		this.charts.render(this.chartContainer);
+
+		this.optionMap = {
+			'type': this.optionMap['type']
+		};
+
+		this.optionMap["Charts"] = {element: this.chartContainer};
+
+
 		//TODO: create all the containers and visualizer option instances?
 
-		// this.options = new Proxy(this.options, {
-		// 	get: function (target, key, receiver) {
-		// 		return Reflect.get(target, key, receiver);
-		// 	},
-		// 	set: function (target, key, value, receiver) {
-		// 		let change = false;
-		// 		if (target[key] !== value) {
-		// 			change = true;
-		// 		}
-
-		// 		let result = Reflect.set(target, key, value, receiver);
-		// 		// mirror the change in our state
-		// 		if (self.state) {
-		// 			Reflect.set(self.state.options, key, value);
-		// 		}
-
-		// 		return result;
-		// 	}
-		// }) as IInsightOptions;
 
 		// ChartOptions.general[0].options = insightRegistry.getAllIds();
 		// ChartOptions.general.map(o => {
@@ -137,14 +117,19 @@ export class VisualizerView extends Disposable implements IPanelView {
 	private visualizerExtensionSelected(visualizerExtensionName: string) {
 		console.log("VisualizerExtension changed to: " + visualizerExtensionName);
 		this.currentVisualizerExtension = visualizerExtensionName;
-		//this.container.appendChild(this.extensionContainer);
-		if (visualizerExtensionName === "Charts") {
-			console.log("true, changed to: " + this.currentVisualizerExtension);
-			this.getChartsView();
-		} else {
-			console.log("true, changed to: " + this.currentVisualizerExtension);
-			this.getVisualizerExtensionView();
+
+		if (!this.optionMap.hasOwnProperty(visualizerExtensionName)) {
+			this.createOption(visualizerExtensionName);
 		}
+		this.verifyOptions();
+
+		// if (visualizerExtensionName === "Charts") {
+		// 	console.log("true, changed to: " + this.currentVisualizerExtension);
+		// 	this.getChartsView();
+		// } else {
+		// 	console.log("true, changed to: " + this.currentVisualizerExtension);
+		// 	this.getVisualizerExtensionView();
+		// }
 	}
 
 	private getCurrentVisualizerExtentionName() {
@@ -180,15 +165,15 @@ export class VisualizerView extends Disposable implements IPanelView {
 			this.container = DOM.$('div.chart-parent-container');
 			this.container.appendChild(this.dropdownContainer);
 			this.extensionContainer = DOM.$('div.extension-container');
-			this.chartContainer = DOM.$('div.chartFull-container');
+			// this.chartContainer = DOM.$('div.chartFull-container');
 
-			this.charts.render(this.chartContainer);
+			// this.charts.render(this.chartContainer);
 			this.extensionContainer.appendChild(this.chartContainer);
 			this.container.appendChild(this.extensionContainer);
 		}
 
 		container.appendChild(this.container);
-
+		this.verifyOptions();
 
 	}
 
@@ -211,87 +196,74 @@ export class VisualizerView extends Disposable implements IPanelView {
 
 	public set queryRunner(runner: QueryRunner) {
 		this.charts.queryRunner = runner;
-		this._queryRunner = runner;
+		//this._queryRunner = runner;
 		//this.shouldGraph();
 	}
 
-	// private shouldGraph() {
-	// 	// Check if we have the necessary information
-	// 	if (this._currentData && this._queryRunner) {
-	// 		// check if we are being asked to graph something that is available
-	// 		let batch = this._queryRunner.batchSets[this._currentData.batchId];
-	// 		if (batch) {
-	// 			let summary = batch.resultSetSummaries[this._currentData.resultId];
-	// 			if (summary) {
-	// 				this._queryRunner.getQueryRows(0, summary.rowCount, 0, 0).then(d => {
-	// 					this._data = {
-	// 						columns: summary.columnInfo.map(c => c.columnName),
-	// 						rows: d.resultSubset.rows.map(r => r.map(c => c.displayValue))
-	// 					};
-	// 					if (this.insight) {
-	// 						this.insight.data = this._data;
-	// 					}
-	// 				});
-	// 			}
-	// 		}
-	// 		// if we have the necessary information but the information isn't available yet,
-	// 		// we should be smart and retrying when the information might be available
-	// 	}
-	// }
 
-	// private buildOptions() {
-	// 	// The first element in the disposables list is for the chart type: the master dropdown that controls other option controls.
-	// 	// whiling rebuilding the options we should not dispose it, otherwise it would react to the theme change event
-	// 	if (this.optionDisposables.length > 1) {
-	// 		dispose(this.optionDisposables.slice(1));
-	// 		this.optionDisposables.splice(1);
-	// 	}
 
-	// 	this.optionMap = {
-	// 		'type': this.optionMap['type']
-	// 	};
-	// 	DOM.clearNode(this.typeControls);
+	private buildOptions() {
+		// The first element in the disposables list is for the chart type: the master dropdown that controls other option controls.
+		// whiling rebuilding the options we should not dispose it, otherwise it would react to the theme change event
+		if (this.optionDisposables.length > 1) {
+			dispose(this.optionDisposables.slice(1));
+			this.optionDisposables.splice(1);
+		}
 
-	// 	this.updateActionbar();
-	// 	ChartOptions[this.options.type].map(o => {
-	// 		this.createOption(o, this.typeControls);
-	// 	});
-	// 	if (this.insight) {
-	// 		this.insight.options = this.options;
-	// 	}
-	// 	this.verifyOptions();
-	// }
+		// this.optionMap = {
+		// 	'type': this.optionMap['type']
+		// };
+		// DOM.clearNode(this.typeControls);
 
-	// private verifyOptions() {
-	// 	this.updateActionbar();
-	// 	for (let key in this.optionMap) {
-	// 		if (this.optionMap.hasOwnProperty(key)) {
-	// 			let option = ChartOptions[this.options.type].find(e => e.configEntry === key);
-	// 			if (option && option.if) {
-	// 				if (option.if(this.options)) {
-	// 					DOM.show(this.optionMap[key].element);
-	// 				} else {
-	// 					DOM.hide(this.optionMap[key].element);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
+		//this.updateActionbar();
+		// ChartOptions[this.options.type].map(o => {
+		// 	this.createOption(o, this.typeControls);
+		// });
 
-	// private updateActionbar() {
-	// 	if (this.insight && this.insight.isCopyable) {
-	// 		this.taskbar.context = { insight: this.insight.insight, options: this.options };
-	// 		this.taskbar.setContent([
-	// 			{ action: this._createInsightAction },
-	// 			{ action: this._copyAction },
-	// 			{ action: this._saveAction }
-	// 		]);
-	// 	} else {
-	// 		this.taskbar.setContent([{ action: this._createInsightAction }]);
-	// 	}
-	// }
 
-	// private createOption(option: IChartOption, container: HTMLElement) {
+		// if (this.insight) {
+		// 	this.insight.options = this.options;
+		// }
+
+		// Add extentsion html to OptionMap
+		//this.createOption()
+		this.verifyOptions();
+	}
+
+	private verifyOptions() {
+		//this.updateActionbar();
+		for (let key in this.optionMap) {
+			// if (this.optionMap.hasOwnProperty(key)) {
+			// 	//let option = ChartOptions[this.options.type].find(e => e.configEntry === key);
+			// 	if (option && option.if) {
+			// 		if (option.if(this.options)) {
+			// 			DOM.show(this.optionMap[key].element);
+			// 		} else {
+			// 			DOM.hide(this.optionMap[key].element);
+			// 		}
+			// 	}
+			// }
+			if (key === this.currentVisualizerExtension) {
+				DOM.show(this.optionMap[key].element);
+			} else {
+				DOM.hide(this.optionMap[key].element);
+			}
+		}
+	}
+
+	private createOption(extensionId: string) {
+		let optionContainer = DOM.$('div.option-container');
+		let setFunc: (val) => void;
+		// Create Instance of New extension
+		// notify with option container
+
+		// Add to option map
+		this.optionMap[extensionId]= {element: optionContainer};
+		this.extensionContainer.appendChild(optionContainer);
+	}
+
+
+	//private createOption(option: IChartOption, container: HTMLElement) {
 	// 	let label = DOM.$('div');
 	// 	label.innerText = option.label;
 	// 	let optionContainer = DOM.$('div.option-container');
@@ -399,17 +371,17 @@ export class VisualizerView extends Disposable implements IPanelView {
 	public set state(val: ChartState) {
 		this.charts.state = val;
 		this._state = val;
-		if (this.state.options) {
-			for (let key in this.state.options) {
-				if (this.state.options.hasOwnProperty(key) && this.optionMap[key]) {
-					this.options[key] = this.state.options[key];
-					this.optionMap[key].set(this.state.options[key]);
-				}
-			}
-		}
-		if (this.state.dataId) {
-			this.charts.chart(this.state.dataId);
-		}
+		// if (this.state.options) {
+		// 	for (let key in this.state.options) {
+		// 		if (this.state.options.hasOwnProperty(key) && this.optionMap[key]) {
+		// 			this.options[key] = this.state.options[key];
+		// 			this.optionMap[key].set(this.state.options[key]);
+		// 		}
+		// 	}
+		// }
+		// if (this.state.dataId) {
+		// 	this.charts.chart(this.state.dataId);
+		// }
 	}
 
 	public get state(): ChartState {

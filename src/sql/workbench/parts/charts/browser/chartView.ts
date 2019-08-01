@@ -147,6 +147,7 @@ export class ChartView extends Disposable implements IPanelView {
 			this.insightContainer = DOM.$('div.insight-container');
 			this.chartingContainer = DOM.$('div.charting-container');
 
+
 			this.container.appendChild(this.taskbarContainer);
 			this.container.appendChild(this.chartingContainer);
 			this.chartingContainer.appendChild(this.insightContainer);
