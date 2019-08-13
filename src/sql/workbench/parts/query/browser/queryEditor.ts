@@ -195,6 +195,10 @@ export class QueryEditor extends BaseEditor {
 	 * Update the buttons on the taskbar to reflect the state of the current input.
 	 */
 	private updateState(stateChangeEvent: IQueryEditorStateChange): void {
+		if (this.queryEditorVisible.get() === false) {
+			return;
+		}
+
 		if (stateChangeEvent.connectedChange) {
 			this._toggleConnectDatabaseAction.connected = this.input.state.connected;
 			this._changeConnectionAction.enabled = this.input.state.connected;
