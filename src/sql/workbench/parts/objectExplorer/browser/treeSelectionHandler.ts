@@ -15,8 +15,9 @@ import { TreeUpdateUtils } from 'sql/workbench/parts/objectExplorer/browser/tree
 export class TreeSelectionHandler {
 	// progressRunner: IProgressRunner;
 
-	private _lastClicked: any;
 	private _clickTimer: NodeJS.Timer = undefined;
+	private _lastClickedArr: any[];
+	private _lastClicked: any;
 
 	// constructor(@IProgressService private _progressService: IProgressService) {
 
@@ -38,11 +39,15 @@ export class TreeSelectionHandler {
 		return event && event.payload && event.payload.origin === 'mouse';
 	}
 
+
 	/**
 	 * Handle selection of tree element
 	 */
-	public onTreeSelect(event: any, tree: ITree, connectionManagementService: IConnectionManagementService, objectExplorerService: IObjectExplorerService, connectionCompleteCallback: () => void) {
+	public onTreeSelect(event: any, tree: any, connectionManagementService: IConnectionManagementService, objectExplorerService: IObjectExplorerService, connectionCompleteCallback: () => void) {
 		let sendSelectionEvent = ((event: any, selection: any, isDoubleClick: boolean) => {
+			console.log(tree.model.input.id);
+			this._lastClicked = undefined;
+			this._lastClickedArr = undefined;
 			let isKeyboard = event && event.payload && event.payload.origin === 'keyboard';
 			if (!TreeUpdateUtils.isInDragAndDrop) {
 				this.handleTreeItemSelected(connectionManagementService, objectExplorerService, isDoubleClick, isKeyboard, selection, tree, connectionCompleteCallback);
@@ -50,19 +55,24 @@ export class TreeSelectionHandler {
 		});
 
 		let selection = tree.getSelection();
-
 		if (!selection || selection.length === 0) {
 			return;
 		}
+
 		let specificSelection = selection[0];
 
 		if (this.isMouseEvent(event)) {
-			if (this._lastClicked === specificSelection) {
-				clearTimeout(this._clickTimer);
-				sendSelectionEvent(event, selection, true);
-				return;
+			clearTimeout(this._clickTimer);
+			if (this._lastClicked !== undefined) {
+				if (this._lastClicked === specificSelection) {
+					sendSelectionEvent(event, this._lastClickedArr, true);
+					return;
+				} else {
+					sendSelectionEvent(event, this._lastClickedArr, false);
+				}
 			}
 			this._lastClicked = specificSelection;
+			this._lastClickedArr = selection;
 		}
 
 		this._clickTimer = setTimeout(() => {
