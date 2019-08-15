@@ -86,6 +86,7 @@ export class TreeSelectionHandler {
 		if (selection && selection.length > 0 && (selection[0] instanceof ConnectionProfile)) {
 			connectionProfile = <ConnectionProfile>selection[0];
 
+			console.log(connectionProfile.isDisposed());
 			if (connectionProfile) {
 				this.onTreeActionStateChange(true);
 

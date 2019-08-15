@@ -86,11 +86,17 @@ export class ProviderConnectionInfo extends Disposable implements azdata.Connect
 		}
 	}
 
+	private _disposed = false;
 	public dispose(): void {
+		this._disposed = true;
 		if (this._onCapabilitiesRegisteredDisposable) {
 			dispose(this._onCapabilitiesRegisteredDisposable);
 		}
 		super.dispose();
+	}
+
+	public isDisposed(): boolean {
+		return this._disposed;
 	}
 
 	public clone(): ProviderConnectionInfo {
