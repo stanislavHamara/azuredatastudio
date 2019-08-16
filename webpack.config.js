@@ -12,6 +12,9 @@ module.exports = {
 		filename: 'ads.bundle.js'
 	},
 	resolve: {
+		alias: {
+			"onigasm-umd": path.resolve(__dirname, 'node_modules', 'onigasm-umd', 'release', 'main')
+		},
 		extensions: ['.ts', '.tsx', '.js'],
 		modules: [
 			path.resolve(__dirname, 'src'),
@@ -19,10 +22,49 @@ module.exports = {
 		]
 	},
 	module: {
-		rules: [{
-			test: /\.tsx?$/,
-			use: 'ts-loader'
-		}]
+		rules: [
+			{
+				test: /\.css$/,
+				use: [
+					{
+						loader: 'style-loader'
+					},
+					{
+						loader: 'css-loader'
+					}
+				]
+			},
+			{
+				test: /\.ttf$/,
+				use: [
+					{
+						loader: 'file-loader'
+					}
+				]
+			},
+			{
+				test: /\.(svg|png|gif|jpe?g)$/,
+				use: [
+					{
+						loader: 'file-loader'
+					}
+				]
+			},
+			{
+				test: /\.tsx?$/,
+				use: [
+					{
+						loader: 'ts-loader',
+						options: {
+							transpileOnly: true
+						}
+					},
+					{
+						loader: path.resolve(__dirname, 'mycssloader.js')
+					}
+				]
+			}
+		]
 	},
 	mode: 'development'
 };
