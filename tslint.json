@@ -41,9 +41,7 @@
 		"layering": [
 			true,
 			{
-				"common": [
-					"browser" // {{SQL CARBON EDIT}} @anthonydresser not ideal, but for our purposes its fine for now
-				],
+				"common": [ ],
 				"node": [
 					"common"
 				],

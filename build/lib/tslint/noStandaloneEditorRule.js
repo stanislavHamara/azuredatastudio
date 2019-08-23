@@ -37,8 +37,7 @@ class NoStandaloneEditorRuleWalker extends Lint.RuleWalker {
             this._validateImport(path.getText(), node);
         }
     }
-    // {{SQL CARBON EDIT}} - Rename node argument to _node to prevent errors since it is not used
-    _validateImport(path, _node) {
+    _validateImport(path, node) {
         // remove quotes
         path = path.slice(1, -1);
         // resolve relative paths
@@ -50,8 +49,7 @@ class NoStandaloneEditorRuleWalker extends Lint.RuleWalker {
             || /vs(\/|\\)editor(\/|\\)editor.api/.test(path)
             || /vs(\/|\\)editor(\/|\\)editor.main/.test(path)
             || /vs(\/|\\)editor(\/|\\)editor.worker/.test(path)) {
-            // {{SQL CARBON EDIT}}
-            //this.addFailure(this.createFailure(node.getStart(), node.getWidth(), `Not allowed to import standalone editor modules. See https://github.com/Microsoft/vscode/wiki/Code-Organization`));
+            this.addFailure(this.createFailure(node.getStart(), node.getWidth(), `Not allowed to import standalone editor modules. See https://github.com/Microsoft/vscode/wiki/Code-Organization`));
         }
     }
 }
