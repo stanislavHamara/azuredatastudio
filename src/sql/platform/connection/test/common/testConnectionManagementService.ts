@@ -116,10 +116,6 @@ export class TestConnectionManagementService implements IConnectionManagementSer
 		});
 	}
 
-	getAdvancedProperties(): azdata.ConnectionOption[] {
-		return [];
-	}
-
 	getConnectionUri(connectionProfile: ConnectionProfile): string {
 		return undefined;
 	}

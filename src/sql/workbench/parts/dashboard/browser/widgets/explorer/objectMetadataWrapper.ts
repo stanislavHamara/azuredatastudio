@@ -3,8 +3,14 @@
  *  Licensed under the Source EULA. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { MetadataType } from 'sql/platform/connection/common/connectionManagement';
 import { ObjectMetadata } from 'azdata';
+
+export enum MetadataType {
+	Table = 0,
+	View = 1,
+	SProc = 2,
+	Function = 3
+}
 
 export class ObjectMetadataWrapper implements ObjectMetadata {
 	public metadataType: MetadataType;

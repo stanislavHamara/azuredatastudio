@@ -10,38 +10,7 @@ import { IConnectionProfileGroup, ConnectionProfileGroup } from 'sql/platform/co
 import { ConnectionProfile } from 'sql/platform/connection/common/connectionProfile';
 import { IConnectionProfile } from 'sql/platform/connection/common/interfaces';
 import { ConnectionManagementInfo } from 'sql/platform/connection/common/connectionManagementInfo';
-import { IServerGroupDialogCallbacks } from 'sql/platform/serverGroup/common/serverGroupController';
 import { ConnectionProviderProperties } from 'sql/workbench/parts/connection/common/connectionProviderExtension';
-
-/**
- * Options for the actions that could happen after connecting is complete
- */
-export interface IConnectionCompletionOptions {
-	/**
-	 * save the connection to MRU and settings (only save to setting if profile.saveProfile is set to true)
-	 */
-	saveTheConnection: boolean;
-
-	/**
-	 * open the dashboard after connection is complete
-	 */
-	showDashboard: boolean;
-
-	/**
-	 * Parameters to be used if connecting from an editor
-	 */
-	params: INewConnectionParams;
-
-	/**
-	 * Open the connection dialog if connection fails
-	 */
-	showConnectionDialogOnError: boolean;
-
-	/**
-	 * Open the connection firewall rule dialog if connection fails
-	 */
-	showFirewallRuleOnError: boolean;
-}
 
 export interface IConnectionResult {
 	connected: boolean;
@@ -52,12 +21,24 @@ export interface IConnectionResult {
 	connectionProfile?: IConnectionProfile;
 }
 
-export interface IConnectionCallbacks {
-	onConnectStart(): void;
-	onConnectReject(error?: string): void;
-	onConnectSuccess(params: INewConnectionParams, profile: IConnectionProfile): void;
-	onDisconnect(): void;
-	onConnectCanceled(): void;
+export interface IConnectOptions {
+	/**
+	 * Should the resulting connection be saved
+	 */
+	save?: boolean;
+	/**
+	 * Should return an existing connection if available
+	 */
+	useExisting?: boolean;
+	/**
+	 * If a connection error occurs, will ask the user to resolve
+	 * using the connection dialog
+	 */
+	showDialogOnError?: boolean;
+	/**
+	 * If the actual connection fails, will show the firewall rule dialog
+	 */
+	showFirewallRuleOnError?: boolean;
 }
 
 export const SERVICE_ID = 'connectionManagementService';
@@ -78,39 +59,21 @@ export interface IConnectionManagementService {
 	/**
 	 * Opens the connection dialog to create new connection
 	 */
-	showConnectionDialog(params?: INewConnectionParams, options?: IConnectionCompletionOptions, model?: IConnectionProfile, connectionResult?: IConnectionResult): Promise<void>;
+	showConnectionDialog(params?: INewConnectionParams, model?: IConnectionProfile, connectionResult?: IConnectionResult): Promise<void>;
 
 	/**
-	 * Load the password and opens a new connection
+	 * connect with a profile
+	 * @param connection profile to connect with
+	 * @param uri an optional uri to tie to the connection, otherwise a uri will be generated
+	 * @param options options for connecting
 	 */
-	connect(connection: IConnectionProfile, uri: string, options?: IConnectionCompletionOptions, callbacks?: IConnectionCallbacks): Promise<IConnectionResult>;
-
-	/**
-	 * Opens a new connection and save the profile in settings
-	 */
-	connectAndSaveProfile(connection: IConnectionProfile, uri: string, options?: IConnectionCompletionOptions, callbacks?: IConnectionCallbacks): Promise<IConnectionResult>;
+	connect(connection: IConnectionProfile, uri?: string, options?: IConnectOptions): Promise<IConnectionResult>;
 
 	/**
 	 * Finds existing connection for given profile and purpose is any exists.
 	 * The purpose is connection by default
 	 */
 	findExistingConnection(connection: IConnectionProfile, purpose?: 'dashboard' | 'insights' | 'connection'): ConnectionProfile;
-
-	/**
-	 * If there's already a connection for given profile and purpose, returns the ownerUri for the connection
-	 * otherwise tries to make a connection and returns the owner uri when connection is complete
-	 * The purpose is connection by default
-	 */
-	connectIfNotConnected(connection: IConnectionProfile, purpose?: 'dashboard' | 'insights' | 'connection', saveConnection?: boolean): Promise<string>;
-
-	/**
-	 * Adds the successful connection to MRU and send the connection error back to the connection handler for failed connections
-	 */
-	onConnectionComplete(handle: number, connectionInfoSummary: azdata.ConnectionInfoSummary): void;
-
-	onIntelliSenseCacheComplete(handle: number, connectionUri: string): void;
-
-	onConnectionChangedNotification(handle: number, changedConnInfo: azdata.ChangedConnectionInfo);
 
 	getConnectionGroups(providers?: string[]): ConnectionProfileGroup[];
 
@@ -132,15 +95,13 @@ export interface IConnectionManagementService {
 
 	deleteConnectionGroup(group: ConnectionProfileGroup): Promise<boolean>;
 
-	getAdvancedProperties(): azdata.ConnectionOption[];
-
 	getConnectionUri(connectionProfile: IConnectionProfile): string;
 
 	getFormattedUri(uri: string, connectionProfile: IConnectionProfile): string;
 
 	getConnectionUriFromId(connectionId: string): string;
 
-	isConnected(fileUri: string): boolean;
+	isConnected(fileUri: string, connectionProfile?: ConnectionProfile): boolean;
 
 	/**
 	 * Returns true if the connection profile is connected
@@ -154,12 +115,9 @@ export interface IConnectionManagementService {
 
 	isRecent(connectionProfile: ConnectionProfile): boolean;
 
-	isConnected(fileUri: string, connectionProfile?: ConnectionProfile): boolean;
-
 	disconnectEditor(owner: IConnectableInput, force?: boolean): Promise<boolean>;
 
 	disconnect(connection: IConnectionProfile): Promise<void>;
-
 	disconnect(ownerUri: string): Promise<void>;
 
 	addSavedPassword(connectionProfile: IConnectionProfile): Promise<IConnectionProfile>;
@@ -195,10 +153,6 @@ export interface IConnectionManagementService {
 	 * Cancels the connection for the editor
 	 */
 	cancelEditorConnection(owner: IConnectableInput): Thenable<boolean>;
-
-	showDashboard(connection: IConnectionProfile): Thenable<boolean>;
-
-	closeDashboard(uri: string): void;
 
 	getProviderIdFromUri(ownerUri: string): string;
 
@@ -309,13 +263,6 @@ export enum ConnectionType {
 	default = 0,
 	editor = 1,
 	temporary = 2
-}
-
-export enum MetadataType {
-	Table = 0,
-	View = 1,
-	SProc = 2,
-	Function = 3
 }
 
 export enum TaskStatus {
